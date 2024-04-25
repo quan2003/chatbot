@@ -14,10 +14,10 @@ import java.util.Map;
 public class ApiService {
 
     private final RestTemplate restTemplate;
-    private final String API_URL = "https://api.coze.com/open_api/v2/chat";
-    private final String ACCESS_TOKEN = "pat_GYclDat5fCPUwLdntMgnczISfwCQclk1sWJhsc3xB5x14BSHCrO7ZmUi2qPfgRMS";
-    private final String BOT_ID = "7360900876094930952";
-    private final String USER_ID = "123333333";
+    private final String API_URL = "{API_URL}";
+    private final String ACCESS_TOKEN = "{ACCESS_TOKEN}";
+    private final String BOT_ID = "{BOT_ID}";
+    private final String USER_ID = "{USER_ID}";
     private final ObjectMapper objectMapper;
 
     @Autowired
