@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        #chatButton {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            font-size: 24px; /* Tăng kích cỡ biểu tượng để dễ nhận biết */
+            color: white;
+            background: #007bff;
+            border: none;
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 1000; /* Đảm bảo nút chat luôn hiển thị trên cùng */
+        }
+
+        #chatBox {
+            display: none;
+            position: fixed;
+            right: 20px;
+            bottom: 90px;
+            width: 300px;
+            background-color: #fff;
+            border-radius: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 15px;
+            font-family: Arial, sans-serif;
+            flex-direction: column;
+            z-index: 1000; /* Đảm bảo khung chat luôn hiển thị trên cùng */
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 10px 15px;
+            border: 2px solid #007bff;
+            border-radius: 25px;
+            margin-right: 10px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        #sendButton {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 40px;
+            height: 40px;
+            padding: 0;
+        }
+
+        #sendButton:hover {
+            background-color: #0056b3;
+        }
+
+        #messageArea {
+            width: 100%;
+            height: 300px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            padding: 10px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            overflow-wrap: break-word;
+        }
+
+        .user-message, .bot-message {
+            border-radius: 18px; /* Tạo hiệu ứng bong bóng */
+            padding: 10px 20px; /* Thêm padding để nội dung không dính vào viền */
+            margin-bottom: 10px; /* Thêm khoảng cách giữa các tin nhắn */
+            box-sizing: border-box;
+            display: block;
+            clear: both; /* Đảm bảo mỗi tin nhắn nằm trên một hàng mới */
+            max-width: 80%; /* Giới hạn chiều rộng tối đa của tin nhắn */
+        }
+
+        .user-message {
+            background-color: #007bff;
+            color: white;
+            float: left; /* Đẩy tin nhắn của người dùng về bên trái */
+            margin-right: auto;
+        }
+
+        .bot-message {
+            background-color: #504d4d;
+            color: white;
+            float: right; /* Đẩy tin nhắn của bot về bên phải */
+            margin-left: auto;
+        }
+
+        #chatGPT {
+            display: flex;
+            align-items: center;
+        }
+        .loading-overlay {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            top: 0;
+            left: 0;
+            background-color: rgba(255, 255, 255, 0.7); /* Nền mờ cho phần tử bao phủ */
+            z-index: 1001; /* Đảm bảo hiệu ứng loading hiển thị trên cùng */
+        }
+
+        .loading-icon {
+            font-size: 3rem; /* Điều chỉnh kích thước biểu tượng loading */
+            color: #007bff; /* Màu sắc của biểu tượng */
+            animation: spin 2s linear infinite; /* Sử dụng animation để xoay biểu tượng */
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+<body>
+
+<button id="chatButton" onclick="toggleChatBox()">
+    <i class="fas fa-robot"></i>
+</button>
+
+<div id="chatBox">
+    <div id="messageArea">
+        <div id="loading" class="loading-overlay" style="display: none;">
+            <i class="fas fa-circle-notch fa-spin loading-icon"></i>
+        </div>
+    </div>
+    <form id="chatGPT" onsubmit="submitMessage(event)">
+        <input type="text" id="messageInput" placeholder="Enter your message...">
+        <button id="sendButton">
+            <i class="fas fa-paper-plane"></i>
+        </button>
+    </form>
+</div>
+
+<script>
+    function toggleChatBox() {
+        var chatBox = document.getElementById("chatBox");
+        if (chatBox.style.display === "none") {
+            chatBox.style.display = "block";
+        } else {
+            chatBox.style.display = "none";
+        }
+    }
+
+    function submitMessage(event) {
+        event.preventDefault();
+
+        var inputVal = document.getElementById("messageInput").value;
+        if (!inputVal) return; // Thoát nếu input trống
+
+        var messageArea = document.getElementById("messageArea");
+        var loading = document.getElementById("loading");
+        var userMessageDiv = document.createElement("div");
+        userMessageDiv.classList.add("user-message");
+        userMessageDiv.textContent = inputVal; // Sử dụng textContent để tránh XSS
+        messageArea.appendChild(userMessageDiv);
+
+        document.getElementById("messageInput").value = "";
+        loading.style.display = "flex"; // Hiển thị biểu tượng loading
+
+        fetch('http://localhost:8080/GPT/search', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer pat_GYclDat5fCPUwLdntMgnczISfwCQclk1sWJhsc3xB5x14BSHCrO7ZmUi2qPfgRMS',
+                'Content-Type': 'application/json',
+                'Accept': '*/*',
+                'Host': 'api.coze.com',
+                'Connection': 'keep-alive',
+            },
+            body: JSON.stringify({ query: inputVal }),
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok: ' + response.statusText);
+                }
+                return response.json(); // Chuyển đổi phản hồi sang dạng JSON
+            })
+            .then(data => {
+                data.messages.forEach(message => {
+                    if (message.type === 'answer') {
+                        var botMessageDiv = document.createElement("div");
+                        botMessageDiv.classList.add("bot-message");
+                        botMessageDiv.textContent = message.content; // Sử dụng textContent thay vì innerHTML
+                        messageArea.appendChild(botMessageDiv);
+                    }
+                });
+                messageArea.scrollTop = messageArea.scrollHeight; // Cuộn đến tin nhắn mới nhất
+            })
+            .catch(error => {
+                console.error('There has been a problem with your fetch operation:', error);
+                var errorMessageDiv = document.createElement("div");
+                errorMessageDiv.classList.add("error-message");
+                errorMessageDiv.textContent = "Sorry, I couldn't send your message."; // Sử dụng textContent để tránh XSS
+                messageArea.appendChild(errorMessageDiv);
+            })
+            .finally(() => {
+                loading.style.display = "none"; // Ẩn biểu tượng loading khi hoàn tất hoặc có lỗi
+            });
+    }
+</script>
+
+</body>
+</html>
