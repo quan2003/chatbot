@@ -22,7 +22,7 @@ Sau khi chạy ứng dụng, gửi các yêu cầu POST đến endpoint /api/cha
 Cấu Hình
 Cập nhật các giá trị trong src/main/resources/application.properties để phù hợp với thông tin API và cấu hình cá nhân của bạn:
 properties
-api.url=https://api.coze.com/open_api/v2/chat
+api.url=your_api_url
 api.access_token=your_access_token
 api.bot_id=your_bot_id
 api.user_id=your_user_id
